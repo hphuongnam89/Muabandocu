@@ -1,0 +1,4 @@
+package com.cho2hand.marketplace.dto.listing;
+import java.math.BigDecimal;
+import java.time.Instant;
+public record ListingResponse(Long id, Long sellerUserId, Long categoryId, Long conditionId, Long locationId, String title, String description, BigDecimal priceAmount, String currencyCode, Instant publishedAt, String coverImageUrl) { }

@@ -1,0 +1,1 @@
+package com.cho2hand.marketplace.service.admin; import com.cho2hand.marketplace.dto.report.AdminReportResponse; import java.util.*; public interface AdminService{List<AdminReportResponse> reports();void archive(Long listingId);void resolve(Long adminUserId,Long reportId,boolean archive);}

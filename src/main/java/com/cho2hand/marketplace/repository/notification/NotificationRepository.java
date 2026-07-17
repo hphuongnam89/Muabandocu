@@ -1,0 +1,1 @@
+package com.cho2hand.marketplace.repository.notification; import com.cho2hand.marketplace.entity.notification.Notification; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface NotificationRepository extends JpaRepository<Notification,Long>{List<Notification> findByRecipientUserIdOrderByCreatedAtDesc(Long recipientUserId);}
