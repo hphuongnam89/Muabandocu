@@ -31,6 +31,12 @@ public class UserAuthIdentity {
     @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
+
     @Column(name = "verified_at")
     private Instant verifiedAt;
 
@@ -57,4 +63,18 @@ public class UserAuthIdentity {
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public Instant getVerifiedAt() { return verifiedAt; }
     public void setVerifiedAt(Instant verifiedAt) { this.verifiedAt = verifiedAt; }
+    public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    public Instant getLockedUntil() { return lockedUntil; }
+    public boolean isLoginLocked(Instant now) { return lockedUntil != null && lockedUntil.isAfter(now); }
+    public void unlockIfExpired(Instant now) {
+        if (lockedUntil != null && !lockedUntil.isAfter(now)) clearLoginFailures();
+    }
+    public void recordFailedLogin(int maxAttempts, Instant lockUntil) {
+        failedLoginAttempts++;
+        if (failedLoginAttempts >= maxAttempts) lockedUntil = lockUntil;
+    }
+    public void clearLoginFailures() {
+        failedLoginAttempts = 0;
+        lockedUntil = null;
+    }
 }

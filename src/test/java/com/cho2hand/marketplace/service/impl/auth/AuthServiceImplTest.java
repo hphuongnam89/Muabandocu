@@ -19,6 +19,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,6 +55,8 @@ class AuthServiceImplTest {
 
         assertEquals("jwt", response.accessToken());
         assertEquals(7L, response.userId());
+        assertEquals(0, identity.getFailedLoginAttempts());
+        assertNull(identity.getLockedUntil());
     }
 
     @Test
@@ -66,5 +70,26 @@ class AuthServiceImplTest {
                 new BCryptPasswordEncoder(), mock(JwtTokenProvider.class), new AuthMapper());
 
         assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "wrongpass")));
+        assertEquals(1, identity.getFailedLoginAttempts());
+        assertNull(identity.getLockedUntil());
+    }
+
+    @Test
+    void loginTemporarilyLocksIdentityAfterRepeatedFailures() {
+        var identities = mock(UserAuthIdentityRepository.class);
+        var identity = new UserAuthIdentity();
+        identity.setPasswordHash(new BCryptPasswordEncoder().encode("password123"));
+        when(identities.findByIdentityTypeAndNormalizedValue("EMAIL", "minh@example.com")).thenReturn(Optional.of(identity));
+        var service = new AuthServiceImpl(mock(UserRepository.class), identities, mock(UserStatusRepository.class),
+                mock(RoleRepository.class), mock(UserRoleRepository.class), mock(PasswordResetTokenRepository.class),
+                new BCryptPasswordEncoder(), mock(JwtTokenProvider.class), new AuthMapper());
+
+        for (int i = 0; i < 5; i++) {
+            assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "wrongpass")));
+        }
+
+        assertEquals(5, identity.getFailedLoginAttempts());
+        assertNotNull(identity.getLockedUntil());
+        assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "password123")));
     }
 }

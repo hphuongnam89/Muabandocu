@@ -41,6 +41,8 @@ public class AuthServiceImpl implements AuthService {
     private static final String EMAIL = "EMAIL";
     private static final String ACTIVE = "ACTIVE";
     private static final String USER = "USER";
+    private static final int MAX_FAILED_LOGIN_ATTEMPTS = 5;
+    private static final long LOGIN_LOCK_MINUTES = 15;
     private final UserRepository userRepository;
     private final UserAuthIdentityRepository identityRepository;
     private final UserStatusRepository userStatusRepository;
@@ -91,13 +93,18 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
         var identity = findIdentity(request.email());
+        var now = Instant.now();
+        identity.unlockIfExpired(now);
+        if (identity.isLoginLocked(now)) throw new AuthenticationFailedException();
         if (identity.getPasswordHash() == null || !passwordEncoder.matches(request.password(), identity.getPasswordHash())) {
+            identity.recordFailedLogin(MAX_FAILED_LOGIN_ATTEMPTS, now.plus(LOGIN_LOCK_MINUTES, ChronoUnit.MINUTES));
             throw new AuthenticationFailedException();
         }
         var user = userRepository.findById(identity.getUserId()).orElseThrow(() -> new UserNotFoundException(identity.getUserId()));
         var active = userStatusRepository.findByCodeAndActiveTrue(ACTIVE)
                 .orElseThrow(() -> new LookupValueNotFoundException("User status", ACTIVE));
         if (!active.getId().equals(user.getUserStatusId())) throw new AuthenticationFailedException();
+        identity.clearLoginFailures();
         user.setLastActiveAt(Instant.now());
         return response(user, userRoleRepository.findRoleCodesByUserId(user.getId()));
     }
