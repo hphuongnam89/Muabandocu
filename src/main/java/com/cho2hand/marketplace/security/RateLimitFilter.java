@@ -18,7 +18,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         int limit = limit(request);
         if (limit > 0) {
-            var key = request.getRemoteAddr() + ':' + request.getRequestURI();
+            var key = clientIp(request) + ':' + request.getRequestURI();
             var window = windows.compute(key, (ignored, current) -> current == null || current.startedAt + WINDOW_MILLIS < System.currentTimeMillis()
                     ? new Window(System.currentTimeMillis(), 1) : new Window(current.startedAt, current.requests + 1));
             if (window.requests > limit) {
@@ -36,6 +36,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (path.startsWith("/api/v1/auth/")) return 10;
         if ("POST".equals(request.getMethod()) && (path.contains("/messages") || path.contains("/reports") || path.equals("/api/v1/listings"))) return 60;
         return 0;
+    }
+
+    private String clientIp(HttpServletRequest request) {
+        var forwarded = request.getHeader("X-Forwarded-For");
+        return forwarded == null || forwarded.isBlank() ? request.getRemoteAddr() : forwarded.split(",")[0].trim();
     }
 
     // ponytail: in-memory limits cover one container; replace with Redis only when multiple backend replicas are introduced.
