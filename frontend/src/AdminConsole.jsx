@@ -1212,15 +1212,15 @@ function Security({ health, audits, page }) {
             <span>{label}</span>
           </article>
         ))}
-        <article>
+        <article title="Tổng số request bị chặn kể từ lần khởi động backend gần nhất">
           <b>{health?.rateLimitBlocks ?? "—"}</b>
           <span>Rate-limit từ lúc API khởi động</span>
         </article>
-        <article>
+        <article title="Số tài khoản có lần đăng nhập thất bại đang được ghi nhận">
           <b>{health?.identitiesWithFailures ?? "—"}</b>
           <span>Tài khoản đăng nhập lỗi</span>
         </article>
-        <article>
+        <article title="Số tài khoản đang bị khóa do chính sách bảo mật">
           <b>{health?.lockedIdentities ?? "—"}</b>
           <span>Tài khoản đang bị khóa</span>
         </article>
@@ -1230,6 +1230,9 @@ function Security({ health, audits, page }) {
           <div>
             <span>KHÔNG THỂ SỬA</span>
             <h2>Nhật ký quản trị</h2>
+            <p className="admin-table-note">
+              Nhật ký là bằng chứng kiểm toán nên không được sửa hoặc hoàn tác trực tiếp. Hãy mở đối tượng để thực hiện thao tác nghiệp vụ mới.
+            </p>
           </div>
         </header>
         <div className="admin-table-wrap">
@@ -1241,6 +1244,7 @@ function Security({ health, audits, page }) {
                 <th>Hành động</th>
                 <th>Đối tượng</th>
                 <th>Chi tiết</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -1255,7 +1259,16 @@ function Security({ health, audits, page }) {
                   <td>
                     {item.targetType} #{item.targetId ?? "—"}
                   </td>
-                  <td>{item.details || "—"}</td>
+                  <td>{item.details || "Không có ghi chú bổ sung"}</td>
+                  <td>
+                    {item.targetType === "LISTING" && item.targetId ? (
+                      <Link className="secondary" to={`/tin/${item.targetId}`}>Xem tin</Link>
+                    ) : item.targetType === "USER" && item.targetId ? (
+                      <Link className="secondary" to={`/nguoi-ban/${item.targetId}`}>Xem người dùng</Link>
+                    ) : (
+                      <span className="admin-muted">Không khả dụng</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

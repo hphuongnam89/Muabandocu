@@ -46,6 +46,8 @@ body:has(.admin-page) > #root > header,body:has(.admin-page) .category-bar,body:
 .admin-toolbar input,.admin-toolbar select{min-width:0;margin:0}.admin-toolbar button{white-space:nowrap}
 .admin-table-card{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 12px 32px rgba(28,25,23,.05)}
 .admin-table-card>header{display:flex;align-items:end;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--line)}
+.admin-table-note{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.5;max-width:760px}
+.admin-muted{color:var(--muted);font-size:12px}
 .admin-table-card>header button{border:0;background:transparent;color:var(--orange-dark);font-weight:800;box-shadow:none}
 .admin-table-wrap{overflow:auto}.admin-table-card table{width:100%;border-collapse:collapse;white-space:nowrap}.admin-table-card th,.admin-table-card td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}.admin-table-card th{background:#fafaf9;color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase}.admin-table-card td b,.admin-table-card td small{display:block}.admin-table-card td small{margin-top:3px;color:var(--muted)}
 .admin-table-card .danger{background:#fff1f0;color:#b42318;border:1px solid #fecaca;box-shadow:none}.admin-table-card .danger:hover{background:#fee2e2}
