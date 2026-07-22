@@ -3,9 +3,13 @@ package com.cho2hand.marketplace.service.impl.storage;
 import com.cho2hand.marketplace.exception.MediaStorageException;
 import com.cho2hand.marketplace.service.storage.StorageHealthService;
 import com.cho2hand.marketplace.storage.MinioProperties;
-import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
+import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,6 +17,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class R2StorageHealthService implements StorageHealthService {
     private static final Logger log = LoggerFactory.getLogger(R2StorageHealthService.class);
+    private static final long CACHE_MILLIS = 60_000;
+    private volatile long lastSuccessfulCheckAt;
     private final MinioClient minio;
     private final MinioProperties props;
 
@@ -23,17 +29,22 @@ public class R2StorageHealthService implements StorageHealthService {
 
     @Override
     public void ensureReady() {
+        if (System.currentTimeMillis() - lastSuccessfulCheckAt < CACHE_MILLIS) return;
+        var key = "_health/" + Instant.now().toEpochMilli() + ".txt";
+        var bytes = "ok".getBytes(StandardCharsets.UTF_8);
         try {
-            if (!minio.bucketExists(BucketExistsArgs.builder().bucket(props.bucket()).build())) {
-                log.error("storage_bucket_missing bucket={} endpointHost={}", props.bucket(), endpointHost());
-                throw new MediaStorageException("Không tìm thấy bucket Cloudflare R2.", null);
-            }
-        } catch (MediaStorageException exception) {
-            throw exception;
+            minio.putObject(PutObjectArgs.builder()
+                    .bucket(props.bucket())
+                    .object(key)
+                    .stream(new ByteArrayInputStream(bytes), bytes.length, -1)
+                    .contentType("text/plain")
+                    .build());
+            minio.removeObject(RemoveObjectArgs.builder().bucket(props.bucket()).object(key).build());
+            lastSuccessfulCheckAt = System.currentTimeMillis();
         } catch (Exception exception) {
             log.error("storage_health_failed bucket={} endpointHost={} errorType={} error={}",
                     props.bucket(), endpointHost(), exception.getClass().getSimpleName(), exception.getMessage());
-            throw new MediaStorageException("Cloudflare R2 chưa sẵn sàng. Vui lòng kiểm tra cấu hình lưu trữ.", exception);
+            throw new MediaStorageException("Cloudflare R2 chưa sẵn sàng. Kiểm tra endpoint, bucket và quyền ghi/xoá object.", exception);
         }
     }
 
