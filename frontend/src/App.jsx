@@ -1029,8 +1029,11 @@ function Login() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     try {
-      await login(f.get("email"), f.get("password"));
-      navigate(query.get("returnTo") || "/");
+      const session = await login(f.get("email"), f.get("password"));
+      navigate(
+        query.get("returnTo") ||
+          (session.roles?.includes("ADMIN") ? "/admin" : "/"),
+      );
     } catch (e) {
       setError(e.message);
     }

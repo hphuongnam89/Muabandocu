@@ -831,7 +831,7 @@ function Categories({ items, reload, setError }) {
           />{" "}
           Đang hoạt động
         </label>
-        <button disabled={saving}>
+        <button className="primary" disabled={saving}>
           {form.id ? "Lưu danh mục" : "Thêm danh mục"}
         </button>
         {form.id && (

@@ -146,14 +146,14 @@ public class AdminServiceImpl implements AdminService {
         var listing = listings.findById(id).orElseThrow(() -> new ListingNotFoundException(id));
         listing.setArchivedAt(Instant.now());
         listing.setListingStatusId(ARCHIVED_LISTING);
-        audit(adminUserId, "ARCHIVE_LISTING", "LISTING", id, null);
+        audit(adminUserId, "ARCHIVE_LISTING", "LISTING", id, "Tin đã được ẩn khỏi marketplace");
     }
 
     @Override public void restore(Long adminUserId, Long id) {
         var listing = listings.findById(id).orElseThrow(() -> new ListingNotFoundException(id));
         listing.setArchivedAt(null);
         listing.setListingStatusId(ACTIVE_LISTING);
-        audit(adminUserId, "RESTORE_LISTING", "LISTING", id, null);
+        audit(adminUserId, "RESTORE_LISTING", "LISTING", id, "Tin đã được khôi phục và hiển thị lại");
     }
 
     @Override public void resolve(Long admin, Long reportId, boolean archive) {
