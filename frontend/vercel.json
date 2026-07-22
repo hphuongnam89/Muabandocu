@@ -7,6 +7,10 @@
     {
       "source": "/actuator/:path*",
       "destination": "https://muabandocu-production.up.railway.app/actuator/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
