@@ -5,9 +5,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpecificationExecutor<Listing> {
     Page<Listing> findByListingStatusIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long statusId, Pageable pageable);
     Page<Listing> findByListingStatusIdAndCategoryIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long statusId, Long categoryId, Pageable pageable);
     Page<Listing> findBySellerUserIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long sellerUserId, Pageable pageable);
-    long countBySellerUserIdAndPublishedAtGreaterThanEqual(Long sellerUserId, Instant publishedAt);
+    @Query("""
+            select count(distinct l.id) from Listing l
+            where l.sellerUserId = :sellerUserId
+              and l.archivedAt is null
+              and l.publishedAt >= :publishedAt
+              and exists (
+                  select 1 from ListingImage image
+                  where image.id.listingId = l.id
+              )
+            """)
+    long countPublishedWithImagesThisMonth(@Param("sellerUserId") Long sellerUserId, @Param("publishedAt") Instant publishedAt);
 }

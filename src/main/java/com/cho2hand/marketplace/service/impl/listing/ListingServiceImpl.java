@@ -126,7 +126,7 @@ public class ListingServiceImpl implements ListingService {
     private com.cho2hand.marketplace.entity.listing.ListingStatus activeStatus() { return statuses.findByCodeAndActiveTrue("ACTIVE").orElseThrow(() -> new LookupValueNotFoundException("Listing status", "ACTIVE")); }
     private void enforceMonthlyQuota(Long seller) {
         var start = YearMonth.now(ZoneId.of("Asia/Ho_Chi_Minh")).atDay(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
-        var used = listings.countBySellerUserIdAndPublishedAtGreaterThanEqual(seller, start);
+        var used = listings.countPublishedWithImagesThisMonth(seller, start);
         if (used >= MONTHLY_LISTING_LIMIT) {
             log.warn("monthly_listing_quota_exceeded sellerUserId={} used={} limit={}", seller, used, MONTHLY_LISTING_LIMIT);
             throw new QuotaExceededException("Bạn đã dùng hết 3 lượt đăng tin trong tháng này.");
