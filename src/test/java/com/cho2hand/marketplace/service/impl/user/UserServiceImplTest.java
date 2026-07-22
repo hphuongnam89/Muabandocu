@@ -5,7 +5,9 @@ import com.cho2hand.marketplace.dto.user.UpdateUserRequest;
 import com.cho2hand.marketplace.entity.user.User;
 import com.cho2hand.marketplace.exception.UserNotFoundException;
 import com.cho2hand.marketplace.mapper.user.UserMapper;
+import com.cho2hand.marketplace.repository.auth.UserRoleRepository;
 import com.cho2hand.marketplace.repository.user.UserRepository;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
     @Mock UserRepository userRepository;
+    @Mock UserRoleRepository userRoleRepository;
     @InjectMocks UserServiceImpl userService;
     @Spy UserMapper userMapper = new UserMapper();
 
@@ -30,6 +33,7 @@ class UserServiceImplTest {
         user.setDisplayName("Minh");
         user.setUserStatusId(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRoleRepository.findRoleCodesByUserId(1L)).thenReturn(List.of("USER"));
 
         assertThat(userService.getById(1L).displayName()).isEqualTo("Minh");
     }

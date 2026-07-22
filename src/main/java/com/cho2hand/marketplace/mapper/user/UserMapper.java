@@ -4,6 +4,7 @@ import com.cho2hand.marketplace.dto.user.CreateUserRequest;
 import com.cho2hand.marketplace.dto.user.UserResponse;
 import com.cho2hand.marketplace.dto.user.UpdateUserRequest;
 import com.cho2hand.marketplace.entity.user.User;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,7 +23,11 @@ public class UserMapper {
     }
 
     public UserResponse toResponse(User user) {
+        return toResponse(user, List.of());
+    }
+
+    public UserResponse toResponse(User user, List<String> roles) {
         return new UserResponse(user.getId(), user.getUserStatusId(), user.getDisplayName(),
-                user.getAvatarMediaId(), user.getJoinedAt(), user.getLastActiveAt());
+                user.getAvatarMediaId(), user.getJoinedAt(), user.getLastActiveAt(), roles);
     }
 }

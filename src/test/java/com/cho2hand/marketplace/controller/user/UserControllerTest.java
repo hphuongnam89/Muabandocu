@@ -18,7 +18,7 @@ class UserControllerTest {
     @Test
     void returnsUser() throws Exception {
         var service = Mockito.mock(UserService.class);
-        Mockito.when(service.getById(1L)).thenReturn(new UserResponse(1L, 1L, "Minh", null, Instant.now(), null));
+        Mockito.when(service.getById(1L)).thenReturn(new UserResponse(1L, 1L, "Minh", null, Instant.now(), null, java.util.List.of("USER")));
         MockMvc mvc = MockMvcBuilders.standaloneSetup(new UserController(service))
                 .setControllerAdvice(new ApiExceptionHandler()).build();
 
