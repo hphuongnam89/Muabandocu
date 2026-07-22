@@ -30,6 +30,8 @@ public class ApiExceptionHandler {
     ProblemDetail forbidden(ListingAccessDeniedException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage()); }
     @ExceptionHandler(UserAccessDeniedException.class)
     ProblemDetail userForbidden(UserAccessDeniedException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage()); }
+    @ExceptionHandler(AdminOperationException.class)
+    ProblemDetail adminOperation(AdminOperationException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage()); }
 
     @ExceptionHandler(LookupValueNotFoundException.class)
     ProblemDetail invalidReference(LookupValueNotFoundException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage()); }

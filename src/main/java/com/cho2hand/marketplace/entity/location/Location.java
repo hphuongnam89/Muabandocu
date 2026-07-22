@@ -20,4 +20,5 @@ public class Location {
     public String getName() { return name; }
     public String getCode() { return code; }
     public boolean isActive() { return active; }
+    public void setActive(boolean value) { active = value; }
 }

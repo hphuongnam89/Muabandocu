@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(RateLimitFilter.class);
     private static final long WINDOW_MILLIS = 60_000;
     private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
+    private final AtomicLong blockedRequests = new AtomicLong();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
@@ -25,6 +27,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             var window = windows.compute(key, (ignored, current) -> current == null || current.startedAt + WINDOW_MILLIS < System.currentTimeMillis()
                     ? new Window(System.currentTimeMillis(), 1) : new Window(current.startedAt, current.requests + 1));
             if (window.requests > limit) {
+                blockedRequests.incrementAndGet();
                 log.warn("rate_limit_exceeded ip={} method={} path={} requests={} limit={}", clientIp(request), request.getMethod(), request.getRequestURI(), window.requests, limit);
                 response.setStatus(429);
                 response.setContentType("application/problem+json");
@@ -34,6 +37,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
         chain.doFilter(request, response);
     }
+
+    public long blockedRequests() { return blockedRequests.get(); }
 
     private int limit(HttpServletRequest request) {
         var path = request.getRequestURI();

@@ -40,4 +40,10 @@ public class Category {
     public boolean isLeaf() { return leaf; }
     public short getSortOrder() { return sortOrder; }
     public boolean isActive() { return active; }
+    public void setParentCategoryId(Long value) { parentCategoryId = value; }
+    public void setName(String value) { name = value; }
+    public void setSlug(String value) { slug = value; }
+    public void setLeaf(boolean value) { leaf = value; }
+    public void setSortOrder(short value) { sortOrder = value; }
+    public void setActive(boolean value) { active = value; }
 }

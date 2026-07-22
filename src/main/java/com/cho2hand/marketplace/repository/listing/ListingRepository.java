@@ -12,6 +12,15 @@ public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpec
     long countByArchivedAtIsNotNull();
     long countByListingStatusIdAndArchivedAtIsNull(Long listingStatusId);
     long countByPublishedAtGreaterThanEqualAndArchivedAtIsNull(Instant publishedAt);
+    long countBySellerUserId(Long sellerUserId);
+    @Query("""
+            select l from Listing l
+            where (:query is null or lower(l.title) like lower(concat('%', :query, '%')) or str(l.id) = :query)
+              and (:archived is null or (:archived = true and l.archivedAt is not null)
+                   or (:archived = false and l.archivedAt is null))
+            order by l.createdAt desc
+            """)
+    Page<Listing> searchForAdmin(@Param("query") String query, @Param("archived") Boolean archived, Pageable pageable);
     Page<Listing> findByListingStatusIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long statusId, Pageable pageable);
     Page<Listing> findByListingStatusIdAndCategoryIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long statusId, Long categoryId, Pageable pageable);
     Page<Listing> findBySellerUserIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long sellerUserId, Pageable pageable);

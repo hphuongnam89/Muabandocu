@@ -10,4 +10,5 @@ import org.springframework.data.repository.query.Param;
 public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> {
     @Query("select r.code from UserRole ur join Role r on r.id = ur.id.roleId where ur.id.userId = :userId")
     List<String> findRoleCodesByUserId(@Param("userId") Long userId);
+    long countByIdRoleId(Long roleId);
 }

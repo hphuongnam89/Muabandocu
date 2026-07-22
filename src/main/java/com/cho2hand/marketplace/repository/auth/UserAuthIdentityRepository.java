@@ -8,4 +8,6 @@ public interface UserAuthIdentityRepository extends JpaRepository<UserAuthIdenti
     Optional<UserAuthIdentity> findByIdentityTypeAndNormalizedValue(String identityType, String normalizedValue);
     Optional<UserAuthIdentity> findByUserIdAndIdentityType(Long userId, String identityType);
     boolean existsByIdentityTypeAndNormalizedValue(String identityType, String normalizedValue);
+    long countByFailedLoginAttemptsGreaterThan(int attempts);
+    long countByLockedUntilAfter(java.time.Instant now);
 }
