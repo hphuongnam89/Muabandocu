@@ -64,6 +64,7 @@ public class MediaServiceImpl implements MediaService {
         }
         var webp = ImageOptimizer.toWebp(file);
         var key = "listings/" + listing + "/" + UUID.randomUUID() + ".webp";
+        var storedInR2 = true;
         try {
             minio.putObject(PutObjectArgs.builder()
                     .bucket(props.bucket())
@@ -71,11 +72,19 @@ public class MediaServiceImpl implements MediaService {
                     .stream(new ByteArrayInputStream(webp), webp.length, -1)
                     .contentType(WEBP)
                     .build());
+        } catch (Exception exception) {
+            storedInR2 = false;
+            key = "db/listings/" + listing + "/" + UUID.randomUUID() + ".webp";
+            log.warn("media_upload_r2_fallback listingId={} userId={} bucket={} endpointHost={} errorType={} error={}",
+                    listing, user, props.bucket(), endpointHost(), exception.getClass().getSimpleName(), exception.getMessage());
+        }
+        try {
             var asset = new MediaAsset();
             asset.setOwnerUserId(user);
             asset.setStorageKey(key);
             asset.setContentType(WEBP);
             asset.setByteSize(webp.length);
+            if (!storedInR2) asset.setStorageData(webp);
             asset = media.save(asset);
             var order = (short) images.countByIdListingId(listing);
             images.save(new ListingImage(listing, asset.getId(), order));
@@ -101,6 +110,7 @@ public class MediaServiceImpl implements MediaService {
     public MediaContent content(Long listing, Long mediaId) {
         images.findById(new ListingImageId(listing, mediaId)).orElseThrow(() -> new InvalidMediaException("Image not found"));
         var asset = media.findById(mediaId).orElseThrow(() -> new InvalidMediaException("Image not found"));
+        if (asset.getStorageData() != null) return new MediaContent(asset.getStorageData(), asset.getContentType());
         try (var stream = minio.getObject(GetObjectArgs.builder().bucket(props.bucket()).object(asset.getStorageKey()).build())) {
             return new MediaContent(stream.readAllBytes(), asset.getContentType());
         } catch (Exception exception) {
@@ -118,7 +128,9 @@ public class MediaServiceImpl implements MediaService {
                 .filter(value -> user.equals(value.getOwnerUserId()))
                 .orElseThrow(() -> new InvalidMediaException("Image not found"));
         try {
-            minio.removeObject(RemoveObjectArgs.builder().bucket(props.bucket()).object(asset.getStorageKey()).build());
+            if (asset.getStorageData() == null) {
+                minio.removeObject(RemoveObjectArgs.builder().bucket(props.bucket()).object(asset.getStorageKey()).build());
+            }
             images.delete(link);
             media.delete(asset);
         } catch (Exception exception) {
