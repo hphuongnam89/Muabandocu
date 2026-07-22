@@ -35,6 +35,8 @@ public class ApiExceptionHandler {
     ProblemDetail invalidReference(LookupValueNotFoundException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage()); }
     @ExceptionHandler(InvalidMediaException.class)
     ProblemDetail invalidMedia(InvalidMediaException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage()); }
+    @ExceptionHandler(MediaStorageException.class)
+    ProblemDetail mediaStorage(MediaStorageException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage()); }
     @ExceptionHandler(DuplicateReviewException.class)
     ProblemDetail duplicateReview(DuplicateReviewException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage()); }
 
