@@ -14,6 +14,7 @@ export const changePassword=(currentPassword,newPassword)=>request('/api/v1/auth
 export const searchListings=params=>request(`/api/v1/listings?${new URLSearchParams(Object.entries(params).filter(([,v])=>v!==''&&v!=null))}`);
 export const listing=id=>request(`/api/v1/listings/${id}`);
 export const images=id=>request(`/api/v1/listings/${id}/images`);
+export const storageHealth=()=>request('/api/v1/storage/health');
 export const comments=id=>request(`/api/v1/listings/${id}/comments`);
 export const addComment=(id,body)=>request(`/api/v1/listings/${id}/comments`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body})});
 export const uploadImage=(id,file)=>{const body=new FormData();body.append('file',file);return request(`/api/v1/listings/${id}/images`,{method:'POST',body});};

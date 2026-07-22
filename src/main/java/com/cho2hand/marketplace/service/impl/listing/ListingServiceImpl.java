@@ -12,6 +12,7 @@ import com.cho2hand.marketplace.repository.location.LocationRepository;
 import com.cho2hand.marketplace.repository.media.ListingImageRepository;
 import com.cho2hand.marketplace.service.listing.ListingService;
 import com.cho2hand.marketplace.service.security.CaptchaService;
+import com.cho2hand.marketplace.service.storage.StorageHealthService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.YearMonth;
@@ -39,17 +40,20 @@ public class ListingServiceImpl implements ListingService {
     private final ListingImageRepository images;
     private final ListingMapper mapper;
     private final CaptchaService captchaService;
+    private final StorageHealthService storageHealthService;
 
     public ListingServiceImpl(ListingRepository listings, CategoryRepository categories, ItemConditionRepository conditions,
             LocationRepository locations, ListingStatusRepository statuses, ListingImageRepository images, ListingMapper mapper,
-            CaptchaService captchaService) {
+            CaptchaService captchaService, StorageHealthService storageHealthService) {
         this.listings = listings; this.categories = categories; this.conditions = conditions; this.locations = locations;
         this.statuses = statuses; this.images = images; this.mapper = mapper;
         this.captchaService = captchaService;
+        this.storageHealthService = storageHealthService;
     }
 
     public ListingResponse create(Long seller, CreateListingRequest request) {
         captchaService.verify(request.captchaToken());
+        storageHealthService.ensureReady();
         enforceMonthlyQuota(seller);
         validate(request.categoryId(), request.conditionId(), request.locationId());
         var listing = new Listing();
