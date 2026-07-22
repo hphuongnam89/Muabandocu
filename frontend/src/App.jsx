@@ -1062,9 +1062,9 @@ function Login() {
   );
 }
 function OAuthSuccess() {
-  const navigate = useNavigate();
-  useEffect(() => { sessionStorage.setItem("oldmarket-session", "1"); window.dispatchEvent(new Event("auth-changed")); navigate("/", { replace: true }); }, [navigate]);
-  return <Page><p>Đang hoàn tất đăng nhập…</p></Page>;
+  const navigate = useNavigate(), [error, setError] = useState("");
+  useEffect(() => { me().then(() => { sessionStorage.setItem("oldmarket-session", "1"); window.dispatchEvent(new Event("auth-changed")); navigate("/", { replace: true }); }).catch((e) => setError(e.message || "Không thể hoàn tất đăng nhập.")); }, [navigate]);
+  return <Page><p>{error || "Đang hoàn tất đăng nhập…"}</p></Page>;
 }
 function Register() {
   const navigate = useNavigate(),
