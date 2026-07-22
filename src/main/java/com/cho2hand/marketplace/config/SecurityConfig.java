@@ -36,7 +36,9 @@ public class SecurityConfig {
                 .oauth2Login(oauth -> oauth
                         .authorizationEndpoint(endpoint -> endpoint.baseUri("/api/v1/auth/oauth2/authorization"))
                         .redirectionEndpoint(endpoint -> endpoint.baseUri("/api/v1/auth/login/oauth2/code/*"))
-                        .successHandler(oauthSuccess))
+                        .successHandler(oauthSuccess)
+                        .failureHandler((request, response, exception) ->
+                                response.sendRedirect("/dang-nhap?oauthError=invalid_credentials")))
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'"))
                         .frameOptions(frame -> frame.deny())

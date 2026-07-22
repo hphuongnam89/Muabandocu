@@ -1024,7 +1024,11 @@ function SellerProfile() {
 function Login() {
   const navigate = useNavigate(),
     [query] = useSearchParams(),
-    [error, setError] = useState(query.get("message") || "");
+    [error, setError] = useState(
+      query.get("oauthError") === "invalid_credentials"
+        ? "Đăng nhập Google chưa được cấu hình đúng. Vui lòng thử lại sau khi hệ thống được cập nhật."
+        : query.get("message") || "",
+    );
   async function submit(e) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
