@@ -40,7 +40,10 @@ async function request(path, options = {}) {
         );
       }
       if (response.status === 403)
-        throw new ApiError("Bạn không có quyền thực hiện thao tác này.", 403);
+        throw new ApiError(
+          body?.detail || body?.message || "Bạn không có quyền thực hiện thao tác này.",
+          403,
+        );
       throw new ApiError(
         body?.detail || body?.message || "Không thể xử lý yêu cầu.",
         response.status,

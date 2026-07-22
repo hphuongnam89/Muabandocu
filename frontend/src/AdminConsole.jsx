@@ -171,7 +171,7 @@ export default function AdminConsole() {
     setBusy(`user-${user.id}`);
     try {
       await (suspend ? adminSuspendUser(user.id) : adminActivateUser(user.id));
-      await Promise.all([loadUsers(users.number), loadOverview()]);
+      await Promise.all([loadUsers(0), loadOverview()]);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -189,7 +189,7 @@ export default function AdminConsole() {
     setBusy(`role-${user.id}`);
     try {
       await (revoke ? adminRevokeRole(user.id) : adminGrantRole(user.id));
-      await loadUsers(users.number);
+      await loadUsers(0);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -203,7 +203,8 @@ export default function AdminConsole() {
     setBusy(`listing-${item.id}`);
     try {
       await (restore ? adminRestoreListing(item.id) : adminArchive(item.id));
-      await Promise.all([loadListings(listings.number), loadOverview()]);
+      setError("");
+      await Promise.all([loadListings(0), loadOverview()]);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -541,18 +542,19 @@ function Users({
                   <td>{date(user.joinedAt)}</td>
                   <td>
                     <button
-                      className="secondary"
+                      className={user.roles.includes("ADMIN") ? "danger" : "secondary"}
                       disabled={busy === `role-${user.id}`}
                       onClick={() => changeRole(user)}
                     >
                       {user.roles.includes("ADMIN") ? "Thu quyền" : "Cấp admin"}
                     </button>{" "}
                     <button
-                      className={user.statusId === 1 ? "danger" : "secondary"}
+                      className={user.roles.includes("ADMIN") ? "secondary" : user.statusId === 1 ? "danger" : "secondary"}
                       disabled={
                         busy === `user-${user.id}` ||
                         user.roles.includes("ADMIN")
                       }
+                      title={user.roles.includes("ADMIN") ? "Không thể khóa tài khoản quản trị viên" : undefined}
                       onClick={() => change(user)}
                     >
                       {user.statusId === 1 ? "Khóa" : "Mở khóa"}
@@ -777,7 +779,7 @@ function Categories({ items, reload, setError }) {
           <span>PHASE 3</span>
           <h2>Cây danh mục điện tử</h2>
         </div>
-        <small>{items.length} danh mục</small>
+        <small>{items?.length ?? "—"} danh mục</small>
       </div>
       <form className="admin-editor" onSubmit={submit}>
         <input
@@ -798,7 +800,7 @@ function Categories({ items, reload, setError }) {
           onChange={(e) => setForm({ ...form, parentId: e.target.value })}
         >
           <option value="">Danh mục gốc</option>
-          {items
+          {(items || [])
             .filter((x) => x.id !== form.id)
             .map((x) => (
               <option key={x.id} value={x.id}>
@@ -855,7 +857,7 @@ function Categories({ items, reload, setError }) {
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
+              {(items || []).map((item) => (
                 <tr key={item.id}>
                   <td>
                     <b>{item.name}</b>
