@@ -30,9 +30,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         var header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ") && SecurityContextHolder.getContext().getAuthentication() == null) {
+        var token = header != null && header.startsWith("Bearer ") ? header.substring(7) : null;
+        if (token == null && request.getCookies() != null) {
+            for (var cookie : request.getCookies()) if ("OLDMARKET_TOKEN".equals(cookie.getName())) token = cookie.getValue();
+        }
+        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                Claims claims = tokenProvider.parse(header.substring(7));
+                Claims claims = tokenProvider.parse(token);
                 var userId = Long.valueOf(claims.getSubject());
                 if (users.findById(userId).filter(user -> user.getUserStatusId() == 1L).isEmpty()) {
                     chain.doFilter(request, response);

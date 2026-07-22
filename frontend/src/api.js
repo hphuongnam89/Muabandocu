@@ -1,7 +1,9 @@
 const token = () => localStorage.getItem("accessToken");
-export const hasSession = () => Boolean(token());
+export const hasSession = () => sessionStorage.getItem("oldmarket-session") === "1";
 export const logout = () => {
   localStorage.removeItem("accessToken");
+  sessionStorage.removeItem("oldmarket-session");
+  fetch("/api/v1/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => {});
   window.dispatchEvent(new Event("auth-changed"));
 };
 export class ApiError extends Error {
@@ -14,7 +16,7 @@ async function request(path, options = {}) {
   const { timeout = 15000, ...fetchOptions } = options,
     controller = new AbortController(),
     timer = setTimeout(() => controller.abort(), timeout),
-    authenticated = !path.startsWith("/api/v1/auth/") && token(),
+    authenticated = !path.startsWith("/api/v1/auth/"),
     isAuthProbe =
       path === "/api/v1/users/me" || path === "/api/v1/notifications";
   try {
@@ -24,7 +26,7 @@ async function request(path, options = {}) {
       signal: controller.signal,
       headers: {
         ...fetchOptions.headers,
-        ...(authenticated ? { Authorization: `Bearer ${token()}` } : {}),
+        ...(token() ? { Authorization: `Bearer ${token()}` } : {}),
       },
     });
     if (!response.ok) {
@@ -224,7 +226,7 @@ export const login = (email, password) =>
     }),
   }).then(
     (data) => (
-      localStorage.setItem("accessToken", data.accessToken),
+      sessionStorage.setItem("oldmarket-session", "1"),
       window.dispatchEvent(new Event("auth-changed")),
       data
     ),

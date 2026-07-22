@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
@@ -24,10 +26,16 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthResponse register(@Valid @RequestBody RegisterRequest request) { return authService.register(request); }
+    public AuthResponse register(@Valid @RequestBody RegisterRequest request, HttpServletResponse response) { return issue(authService.register(request), response); }
 
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request) { return authService.login(request); }
+    public AuthResponse login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) { return issue(authService.login(request), response); }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(HttpServletResponse response) { var cookie = new Cookie("OLDMARKET_TOKEN", ""); cookie.setHttpOnly(true); cookie.setSecure(true); cookie.setPath("/"); cookie.setMaxAge(0); response.addCookie(cookie); }
+
+    private AuthResponse issue(AuthResponse auth, HttpServletResponse response) { var cookie = new Cookie("OLDMARKET_TOKEN", auth.accessToken()); cookie.setHttpOnly(true); cookie.setSecure(true); cookie.setPath("/"); cookie.setMaxAge(60 * 60); response.addCookie(cookie); return auth; }
 
     @PostMapping("/password-reset-requests")
     @ResponseStatus(HttpStatus.ACCEPTED)
