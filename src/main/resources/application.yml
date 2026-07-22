@@ -13,6 +13,15 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid,profile,email
+            redirect-uri: ${GOOGLE_REDIRECT_URI:{baseUrl}/api/v1/auth/login/oauth2/code/{registrationId}}
 
 security:
   jwt:
@@ -20,6 +29,7 @@ security:
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
 
 app:
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:8088}
   cors:
     allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:8088}
   captcha:

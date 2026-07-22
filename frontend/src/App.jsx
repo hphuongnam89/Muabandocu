@@ -1050,12 +1050,18 @@ function Login() {
         />
         <Captcha />
         <button className="primary">Đăng nhập</button>
+        <a className="secondary" href="/api/v1/auth/oauth2/authorization/google">Đăng nhập với Google</a>
         {error && <p className="error">{error}</p>}
         <Link to="/quen-mat-khau">Quên mật khẩu?</Link>
         <Link to="/dang-ky">Chưa có tài khoản? Đăng ký</Link>
       </form>
     </Auth>
   );
+}
+function OAuthSuccess() {
+  const navigate = useNavigate();
+  useEffect(() => { sessionStorage.setItem("oldmarket-session", "1"); window.dispatchEvent(new Event("auth-changed")); navigate("/", { replace: true }); }, [navigate]);
+  return <Page><p>Đang hoàn tất đăng nhập…</p></Page>;
 }
 function Register() {
   const navigate = useNavigate(),
@@ -2679,6 +2685,7 @@ export default function App() {
           <Route path="/tin/:id/sua" element={guarded(<EditPost />)} />
           <Route path="/nguoi-ban/:id" element={<SellerProfile />} />
           <Route path="/dang-nhap" element={<Login />} />
+          <Route path="/oauth-success" element={<OAuthSuccess />} />
           <Route path="/dang-ky" element={<Register />} />
           <Route path="/quen-mat-khau" element={<Forgot />} />
           <Route path="/dang-tin" element={guarded(<Post />)} />

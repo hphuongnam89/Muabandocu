@@ -116,6 +116,24 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public AuthResponse oauthLogin(String provider, String subject, String email, String displayName) {
+        var normalized = provider.toUpperCase(java.util.Locale.ROOT) + ":" + subject;
+        var identity = identityRepository.findByIdentityTypeAndNormalizedValue("OAUTH", normalized).orElse(null);
+        User user;
+        if (identity == null) {
+            var status = userStatusRepository.findByCodeAndActiveTrue(ACTIVE).orElseThrow(() -> new LookupValueNotFoundException("User status", ACTIVE));
+            var role = roleRepository.findByCodeAndActiveTrue(USER).orElseThrow(() -> new LookupValueNotFoundException("Role", USER));
+            user = new User(); user.setDisplayName(displayName == null || displayName.isBlank() ? email : displayName); user.setUserStatusId(status.getId()); user = userRepository.save(user);
+            identity = new UserAuthIdentity(); identity.setUserId(user.getId()); identity.setIdentityType("OAUTH"); identity.setNormalizedValue(normalized); identity.setVerifiedAt(Instant.now()); identityRepository.save(identity); userRoleRepository.save(new UserRole(user.getId(), role.getId()));
+        } else {
+            var existingUserId = identity.getUserId();
+            user = userRepository.findById(existingUserId).orElseThrow(() -> new UserNotFoundException(existingUserId));
+        }
+        user.setLastActiveAt(Instant.now());
+        return response(user, userRoleRepository.findRoleCodesByUserId(user.getId()));
+    }
+
+    @Override
     public void requestPasswordReset(PasswordResetRequest request) {
         identityRepository.findByIdentityTypeAndNormalizedValue(EMAIL, normalize(request.email())).ifPresent(identity -> {
             var token = new PasswordResetToken();

@@ -20,6 +20,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.cho2hand.marketplace.security.OAuth2LoginSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -28,10 +29,14 @@ public class SecurityConfig {
     PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter, RateLimitFilter rateLimitFilter) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter, RateLimitFilter rateLimitFilter, OAuth2LoginSuccessHandler oauthSuccess) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .oauth2Login(oauth -> oauth
+                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/api/v1/auth/oauth2/authorization"))
+                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/api/v1/auth/login/oauth2/code/*"))
+                        .successHandler(oauthSuccess))
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'"))
                         .frameOptions(frame -> frame.deny())
@@ -41,6 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login",
                                 "/api/v1/auth/password-reset-requests", "/api/v1/auth/password-resets").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/**", "/api/v1/auth/oauth2/**", "/api/v1/auth/login/oauth2/**").permitAll()
                         .requestMatchers("/api/v1/categories/**", "/api/v1/locations/**", "/api/v1/storage/health", "/actuator/health", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/listings/**", "/api/v1/sellers/*/trust-score", "/api/v1/users/*").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
