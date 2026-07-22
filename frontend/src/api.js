@@ -37,6 +37,7 @@ export const confirmTransaction=(listingId,buyerUserId)=>request(`/api/v1/listin
 export const confirmReceipt=id=>request(`/api/v1/transactions/${id}/confirm`,{method:'POST'});
 export const createReview=(id,rating,body)=>request(`/api/v1/transactions/${id}/reviews`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rating:Number(rating),body})});
 export const adminReports=()=>request('/api/v1/admin/reports');
+export const adminStats=()=>request('/api/v1/admin/stats');
 export const adminArchive=id=>request(`/api/v1/admin/listings/${id}/archive`,{method:'PATCH'});
 export const adminDismissReport=id=>request(`/api/v1/admin/reports/${id}/dismiss`,{method:'PATCH'});
 export const adminArchiveReport=id=>request(`/api/v1/admin/reports/${id}/archive`,{method:'PATCH'});

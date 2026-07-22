@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpecificationExecutor<Listing> {
+    long countByArchivedAtIsNull();
+    long countByArchivedAtIsNotNull();
+    long countByListingStatusIdAndArchivedAtIsNull(Long listingStatusId);
+    long countByPublishedAtGreaterThanEqualAndArchivedAtIsNull(Instant publishedAt);
     Page<Listing> findByListingStatusIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long statusId, Pageable pageable);
     Page<Listing> findByListingStatusIdAndCategoryIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long statusId, Long categoryId, Pageable pageable);
     Page<Listing> findBySellerUserIdAndArchivedAtIsNullOrderByPublishedAtDescIdDesc(Long sellerUserId, Pageable pageable);
