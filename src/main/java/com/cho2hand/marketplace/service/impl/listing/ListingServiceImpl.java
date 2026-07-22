@@ -54,7 +54,7 @@ public class ListingServiceImpl implements ListingService {
         validate(request.categoryId(), request.conditionId(), request.locationId());
         var listing = new Listing();
         listing.setSellerUserId(seller); listing.setCategoryId(request.categoryId()); listing.setConditionId(request.conditionId());
-        listing.setLocationId(request.locationId()); listing.setTitle(request.title().trim());
+        listing.setLocationId(request.locationId()); listing.setAddressDetail(request.addressDetail().trim()); listing.setTitle(request.title().trim());
         listing.setDescription(request.description().trim()); listing.setPriceAmount(request.priceAmount());
         listing.setCurrencyCode("VND"); listing.setListingStatusId(activeStatus().getId()); listing.setPublishedAt(Instant.now());
         return response(listings.save(listing));
@@ -74,6 +74,7 @@ public class ListingServiceImpl implements ListingService {
         if (request.title() != null) listing.setTitle(request.title().trim());
         if (request.description() != null) listing.setDescription(request.description().trim());
         if (request.priceAmount() != null) listing.setPriceAmount(request.priceAmount());
+        if (request.addressDetail() != null) listing.setAddressDetail(request.addressDetail().trim());
         return response(listing);
     }
 
@@ -89,7 +90,7 @@ public class ListingServiceImpl implements ListingService {
             BigDecimal minPrice, BigDecimal maxPrice, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("publishedAt"), Sort.Order.desc("id")));
         Specification<Listing> spec = Specification.where(active(activeStatus().getId())).and(keyword(keyword))
-                .and(category(categoryId)).and(condition(conditionId)).and(location(locationId)).and(seller(sellerUserId)).and(price(minPrice, maxPrice));
+                .and(category(categoryId)).and(condition(conditionId)).and(locationIn(locationScope(locationId))).and(seller(sellerUserId)).and(price(minPrice, maxPrice));
         return page(listings.findAll(spec, pageable));
     }
 
@@ -122,7 +123,14 @@ public class ListingServiceImpl implements ListingService {
     }
     private void validateCategory(Long id) { if (categories.findByIdAndActiveTrue(id).filter(value -> value.isLeaf()).isEmpty()) throw new LookupValueNotFoundException("Leaf category", id.toString()); }
     private void validateCondition(Long id) { if (conditions.findByIdAndActiveTrue(id).isEmpty()) throw new LookupValueNotFoundException("Condition", id.toString()); }
-    private void validateLocation(Long id) { if (locations.findByIdAndActiveTrue(id).isEmpty()) throw new LookupValueNotFoundException("Location", id.toString()); }
+    private void validateLocation(Long id) { if (locations.findByIdAndActiveTrue(id).filter(value -> value.getLevel() == 3).isEmpty()) throw new LookupValueNotFoundException("Ward", id.toString()); }
+    private List<Long> locationScope(Long id) {
+        if (id == null) return null;
+        var location = locations.findByIdAndActiveTrue(id).orElseThrow(() -> new LookupValueNotFoundException("Location", id.toString()));
+        if (location.getLevel() == 3) return List.of(id);
+        var childIds = locations.findByParentLocationIdAndActiveTrue(id).stream().map(com.cho2hand.marketplace.entity.location.Location::getId).toList();
+        return childIds.isEmpty() ? List.of(id) : childIds;
+    }
     private com.cho2hand.marketplace.entity.listing.ListingStatus activeStatus() { return statuses.findByCodeAndActiveTrue("ACTIVE").orElseThrow(() -> new LookupValueNotFoundException("Listing status", "ACTIVE")); }
     private void enforceMonthlyQuota(Long seller) {
         var start = YearMonth.now(ZoneId.of("Asia/Ho_Chi_Minh")).atDay(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();

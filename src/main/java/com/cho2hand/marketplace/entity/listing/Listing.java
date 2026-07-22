@@ -17,6 +17,7 @@ public class Listing {
     @Column(nullable = false, columnDefinition = "TEXT") private String description;
     @Column(name = "price_amount", nullable = false, precision = 15, scale = 0) private BigDecimal priceAmount;
     @Column(name = "location_id", nullable = false) private Long locationId;
+    @Column(name = "address_detail") private String addressDetail;
     @Column(name = "published_at") private Instant publishedAt;
     @Column(name = "archived_at") private Instant archivedAt;
     @Column(name = "created_at", nullable = false, updatable = false) private Instant createdAt;
@@ -32,6 +33,7 @@ public class Listing {
     public String getDescription() { return description; } public void setDescription(String v) { description = v; }
     public BigDecimal getPriceAmount() { return priceAmount; } public void setPriceAmount(BigDecimal v) { priceAmount = v; }
     public Long getLocationId() { return locationId; } public void setLocationId(Long v) { locationId = v; }
+    public String getAddressDetail() { return addressDetail; } public void setAddressDetail(String v) { addressDetail = v; }
     public Instant getPublishedAt() { return publishedAt; } public void setPublishedAt(Instant v) { publishedAt = v; }
     public Instant getArchivedAt() { return archivedAt; } public void setArchivedAt(Instant v) { archivedAt = v; }
     public Instant getCreatedAt() { return createdAt; }
