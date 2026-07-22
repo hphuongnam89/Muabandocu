@@ -32,7 +32,7 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/oldmarket?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       DB_USERNAME: oldmarket
       DB_PASSWORD: oldmarket
-      JWT_SECRET: ${JWT_SECRET:-MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET_must_be_set}
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-60}
       APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-http://localhost:8088}
       MINIO_ENDPOINT: http://minio:9000
