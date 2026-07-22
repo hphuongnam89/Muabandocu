@@ -11,11 +11,16 @@ import com.cho2hand.marketplace.repository.listing.*;
 import com.cho2hand.marketplace.repository.location.LocationRepository;
 import com.cho2hand.marketplace.repository.media.ListingImageRepository;
 import com.cho2hand.marketplace.service.listing.ListingService;
+import com.cho2hand.marketplace.service.security.CaptchaService;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -24,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class ListingServiceImpl implements ListingService {
+    private static final Logger log = LoggerFactory.getLogger(ListingServiceImpl.class);
+    private static final int MONTHLY_LISTING_LIMIT = 3;
     private final ListingRepository listings;
     private final CategoryRepository categories;
     private final ItemConditionRepository conditions;
@@ -31,14 +38,19 @@ public class ListingServiceImpl implements ListingService {
     private final ListingStatusRepository statuses;
     private final ListingImageRepository images;
     private final ListingMapper mapper;
+    private final CaptchaService captchaService;
 
     public ListingServiceImpl(ListingRepository listings, CategoryRepository categories, ItemConditionRepository conditions,
-            LocationRepository locations, ListingStatusRepository statuses, ListingImageRepository images, ListingMapper mapper) {
+            LocationRepository locations, ListingStatusRepository statuses, ListingImageRepository images, ListingMapper mapper,
+            CaptchaService captchaService) {
         this.listings = listings; this.categories = categories; this.conditions = conditions; this.locations = locations;
         this.statuses = statuses; this.images = images; this.mapper = mapper;
+        this.captchaService = captchaService;
     }
 
     public ListingResponse create(Long seller, CreateListingRequest request) {
+        captchaService.verify(request.captchaToken());
+        enforceMonthlyQuota(seller);
         validate(request.categoryId(), request.conditionId(), request.locationId());
         var listing = new Listing();
         listing.setSellerUserId(seller); listing.setCategoryId(request.categoryId()); listing.setConditionId(request.conditionId());
@@ -112,4 +124,12 @@ public class ListingServiceImpl implements ListingService {
     private void validateCondition(Long id) { if (conditions.findByIdAndActiveTrue(id).isEmpty()) throw new LookupValueNotFoundException("Condition", id.toString()); }
     private void validateLocation(Long id) { if (locations.findByIdAndActiveTrue(id).isEmpty()) throw new LookupValueNotFoundException("Location", id.toString()); }
     private com.cho2hand.marketplace.entity.listing.ListingStatus activeStatus() { return statuses.findByCodeAndActiveTrue("ACTIVE").orElseThrow(() -> new LookupValueNotFoundException("Listing status", "ACTIVE")); }
+    private void enforceMonthlyQuota(Long seller) {
+        var start = YearMonth.now(ZoneId.of("Asia/Ho_Chi_Minh")).atDay(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+        var used = listings.countBySellerUserIdAndPublishedAtGreaterThanEqual(seller, start);
+        if (used >= MONTHLY_LISTING_LIMIT) {
+            log.warn("monthly_listing_quota_exceeded sellerUserId={} used={} limit={}", seller, used, MONTHLY_LISTING_LIMIT);
+            throw new QuotaExceededException("Bạn đã dùng hết 3 lượt đăng tin trong tháng này.");
+        }
+    }
 }

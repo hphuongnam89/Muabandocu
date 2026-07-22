@@ -24,6 +24,7 @@ import com.cho2hand.marketplace.repository.auth.UserStatusRepository;
 import com.cho2hand.marketplace.repository.user.UserRepository;
 import com.cho2hand.marketplace.security.JwtTokenProvider;
 import com.cho2hand.marketplace.service.auth.AuthService;
+import com.cho2hand.marketplace.service.security.CaptchaService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -52,11 +53,13 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final AuthMapper authMapper;
+    private final CaptchaService captchaService;
 
     public AuthServiceImpl(UserRepository userRepository, UserAuthIdentityRepository identityRepository,
                            UserStatusRepository userStatusRepository, RoleRepository roleRepository,
                            UserRoleRepository userRoleRepository, PasswordResetTokenRepository resetTokenRepository,
-                           PasswordEncoder passwordEncoder, JwtTokenProvider tokenProvider, AuthMapper authMapper) {
+                           PasswordEncoder passwordEncoder, JwtTokenProvider tokenProvider, AuthMapper authMapper,
+                           CaptchaService captchaService) {
         this.userRepository = userRepository;
         this.identityRepository = identityRepository;
         this.userStatusRepository = userStatusRepository;
@@ -66,10 +69,12 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.authMapper = authMapper;
+        this.captchaService = captchaService;
     }
 
     @Override
     public AuthResponse register(RegisterRequest request) {
+        captchaService.verify(request.captchaToken());
         var email = normalize(request.email());
         if (identityRepository.existsByIdentityTypeAndNormalizedValue(EMAIL, email)) throw new DuplicateIdentityException();
         var status = userStatusRepository.findByCodeAndActiveTrue(ACTIVE)
@@ -92,6 +97,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
+        captchaService.verify(request.captchaToken());
         var identity = findIdentity(request.email());
         var now = Instant.now();
         identity.unlockIfExpired(now);

@@ -12,6 +12,7 @@ import com.cho2hand.marketplace.repository.auth.UserRoleRepository;
 import com.cho2hand.marketplace.repository.auth.UserStatusRepository;
 import com.cho2hand.marketplace.repository.user.UserRepository;
 import com.cho2hand.marketplace.security.JwtTokenProvider;
+import com.cho2hand.marketplace.service.security.CaptchaService;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -49,9 +50,9 @@ class AuthServiceImplTest {
         when(jwt.generate(7L, List.of("USER"))).thenReturn("jwt");
 
         var service = new AuthServiceImpl(users, identities, statuses, mock(RoleRepository.class), roles,
-                mock(PasswordResetTokenRepository.class), encoder, jwt, new AuthMapper());
+                mock(PasswordResetTokenRepository.class), encoder, jwt, new AuthMapper(), mock(CaptchaService.class));
 
-        var response = service.login(new LoginRequest("Minh@Example.com", "password123"));
+        var response = service.login(new LoginRequest("Minh@Example.com", "password123", null));
 
         assertEquals("jwt", response.accessToken());
         assertEquals(7L, response.userId());
@@ -67,9 +68,9 @@ class AuthServiceImplTest {
         when(identities.findByIdentityTypeAndNormalizedValue("EMAIL", "minh@example.com")).thenReturn(Optional.of(identity));
         var service = new AuthServiceImpl(mock(UserRepository.class), identities, mock(UserStatusRepository.class),
                 mock(RoleRepository.class), mock(UserRoleRepository.class), mock(PasswordResetTokenRepository.class),
-                new BCryptPasswordEncoder(), mock(JwtTokenProvider.class), new AuthMapper());
+                new BCryptPasswordEncoder(), mock(JwtTokenProvider.class), new AuthMapper(), mock(CaptchaService.class));
 
-        assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "wrongpass")));
+        assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "wrongpass", null)));
         assertEquals(1, identity.getFailedLoginAttempts());
         assertNull(identity.getLockedUntil());
     }
@@ -82,14 +83,14 @@ class AuthServiceImplTest {
         when(identities.findByIdentityTypeAndNormalizedValue("EMAIL", "minh@example.com")).thenReturn(Optional.of(identity));
         var service = new AuthServiceImpl(mock(UserRepository.class), identities, mock(UserStatusRepository.class),
                 mock(RoleRepository.class), mock(UserRoleRepository.class), mock(PasswordResetTokenRepository.class),
-                new BCryptPasswordEncoder(), mock(JwtTokenProvider.class), new AuthMapper());
+                new BCryptPasswordEncoder(), mock(JwtTokenProvider.class), new AuthMapper(), mock(CaptchaService.class));
 
         for (int i = 0; i < 5; i++) {
-            assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "wrongpass")));
+            assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "wrongpass", null)));
         }
 
         assertEquals(5, identity.getFailedLoginAttempts());
         assertNotNull(identity.getLockedUntil());
-        assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "password123")));
+        assertThrows(RuntimeException.class, () -> service.login(new LoginRequest("minh@example.com", "password123", null)));
     }
 }

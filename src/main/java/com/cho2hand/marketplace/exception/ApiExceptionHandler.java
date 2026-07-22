@@ -39,6 +39,10 @@ public class ApiExceptionHandler {
     ProblemDetail mediaStorage(MediaStorageException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage()); }
     @ExceptionHandler(DuplicateReviewException.class)
     ProblemDetail duplicateReview(DuplicateReviewException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage()); }
+    @ExceptionHandler(QuotaExceededException.class)
+    ProblemDetail quota(QuotaExceededException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage()); }
+    @ExceptionHandler(CaptchaVerificationException.class)
+    ProblemDetail captcha(CaptchaVerificationException exception) { return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage()); }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
     ProblemDetail validation(Exception exception) {
